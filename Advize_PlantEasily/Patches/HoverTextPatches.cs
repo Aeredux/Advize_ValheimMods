@@ -10,9 +10,11 @@ static class HoverTextPatches
 
     static bool ShouldShowHints() => config.ModActive && config.EnableBulkHarvest && config.ShowHoverKeyHints;
 
-    static string BuildAreaHint(string actionText)
+    static string BuildHarvestHints(string actionText)
     {
-        return $"\n[<color=yellow><b>{CurrentModifierKey} + $KEY_Use</b></color>] {actionText} (area)";
+        // Vanilla hover text already ends with the Use binding. Mark that as area harvest,
+        // and show the modifier combo as the single-target action.
+        return $" (area)\n[<color=yellow><b>{CurrentModifierKey} + $KEY_Use</b></color>] {actionText}";
     }
 
     [HarmonyPatch(typeof(Beehive), nameof(Beehive.GetHoverText))]
@@ -27,7 +29,7 @@ static class HoverTextPatches
         if (isPrivate || !hasHoney)
             return;
 
-        string suffix = BuildAreaHint(__instance.m_extractText);
+        string suffix = BuildHarvestHints(__instance.m_extractText);
         __result += Localization.instance.Localize(suffix);
     }
 
@@ -37,7 +39,7 @@ static class HoverTextPatches
         if (!ShouldShowHints() || __instance.GetPicked() || __instance.GetEnabled == 0)
             return;
 
-        string suffix = BuildAreaHint("$inventory_pickup");
+        string suffix = BuildHarvestHints("$inventory_pickup");
 
         if (config.ReplantOnHarvest && config.ShowHoverReplantHint && ReplantDB.Registry.TryGetValue(Utils.GetPrefabName(__instance.gameObject), out _))
         {

@@ -28,7 +28,10 @@ static class InteractPatches
                 _instanceIDS.Add(pickable.GetInstanceID());
         }
 
-        if (!config.EnableBulkHarvest || (!ZInput.GetKey(config.KeyboardHarvestModifierKey, false) && !alt))
+        // Use bulk-harvests by default. The harvest modifier or vanilla alt-place selects a single target.
+        // Gamepad uses the same gate: alt is the layout-dependent alt-place button, so holding it harvests one target.
+        bool singleTargetHarvest = ZInput.GetKey(config.KeyboardHarvestModifierKey, false) || alt;
+        if (!config.EnableBulkHarvest || singleTargetHarvest)
             return;
 
         if (interactable is not Pickable && interactable is not Beehive)

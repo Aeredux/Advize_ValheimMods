@@ -124,8 +124,8 @@ sealed class ModConfig
             "Modifier key when using gamepad controls. See https://docs.unity3d.com/ScriptReference/KeyCode.html",
             a => { a.Description = "Modifier key when using gamepad controls."; });
         keyboardHarvestModifierKey = Config.BindInOrder("Controls", "KeyboardHarvestModifierKey", new KeyboardShortcut(KeyCode.LeftShift),
-            "Modifier key to enable bulk harvest when using keyboard controls. See https://docs.unity3d.com/ScriptReference/KeyCode.html",
-            a => { a.Description = "Modifier key to enable bulk harvest when using keyboard controls."; });
+            "Hold with Use to harvest a single target. Use alone bulk harvests when EnableBulkHarvest is enabled. Vanilla alt-place also selects a single target. See https://docs.unity3d.com/ScriptReference/KeyCode.html",
+            a => { a.Description = "Hold with Use to harvest a single target. Use alone bulk harvests."; });
 
         //Difficulty
         preventPartialPlanting = Config.BindInOrder("Difficulty", "PreventPartialPlanting", false, "Prevents placement of resources when any placement ghosts are invalid for any reason.");
@@ -154,7 +154,7 @@ sealed class ModConfig
         extraSaplingSpacing = Config.BindInOrder("Grid", "ExtraSaplingSpacing", 0f, "Adds extra spacing between saplings. Accepts negative values to decrease spacing (not recommended).");
 
         //Harvesting
-        enableBulkHarvest = Config.BindInOrder("Harvesting", "EnableBulkHarvest", true, "Enables the ability to harvest multiple resources at once.");
+        enableBulkHarvest = Config.BindInOrder("Harvesting", "EnableBulkHarvest", true, "Enables area harvest on Use. Hold KeyboardHarvestModifierKey or vanilla alt-place to harvest a single target.");
         harvestStyle = Config.BindInOrder("Harvesting", "HarvestStyle", HarvestStyle.AllResources, "Determines bulk harvest style. LikeResources only harvests resources of the type you've interacted with. AllResources harvests all eligible resources.");
         harvestRadius = Config.BindInOrder("Harvesting", "HarvestRadius", 3.0f, "Determines radius used to search for resources when bulk harvesting.");
         replantOnHarvest = Config.BindInOrder("Harvesting", "ReplantOnHarvest", false, "Enables automatic replanting of crops when harvested, provided you have the resources.");
