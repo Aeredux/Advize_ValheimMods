@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using ConditionalConfigSyncAPI;
 using UnityEngine;
 using static ConfigEventHandlers;
 using static ModContext;
@@ -9,6 +10,7 @@ using static ModContext;
 sealed class ModConfig
 {
     private readonly ConfigFile Config;
+    private readonly ConfigSync ConfigSync; // Cache locally, may use in the future
 
     //Controls
     private readonly ConfigEntry<KeyboardShortcut> enableModKey;
@@ -44,6 +46,7 @@ sealed class ModConfig
     //Grid
     private readonly ConfigEntry<bool> globallyAlignGridDirections;
     private readonly ConfigEntry<bool> minimizeGridSpacing;
+    private readonly ConfigEntry<GridLayout> gridLayout;
     private readonly ConfigEntry<GridSnappingStyle> gridSnappingStyle;
     private readonly ConfigEntry<bool> forceAltPlacement;
     private readonly ConfigEntry<bool> preferCardinalSnapping;
@@ -86,6 +89,10 @@ sealed class ModConfig
 
     internal ModConfig(ConfigFile configFile)
     {
+        ConfigSync = new ConfigSync(PlantEasily.PluginID, PlantEasily.PluginName, PlantEasily.Version,
+            minimumRequiredVersion: PlantEasily.MinimumRequiredVersion, modRequired: false);
+        ConfigExtensions.Sync = ConfigSync;
+
         Config = configFile;
         configFile.SaveOnConfigSet = false;
 
@@ -118,14 +125,14 @@ sealed class ModConfig
             "Modifier key when using gamepad controls. See https://docs.unity3d.com/ScriptReference/KeyCode.html",
             a => { a.Description = "Modifier key when using gamepad controls."; });
         keyboardHarvestModifierKey = Config.BindInOrder("Controls", "KeyboardHarvestModifierKey", new KeyboardShortcut(KeyCode.LeftShift),
-            "Modifier key to enable bulk harvest when using keyboard controls. See https://docs.unity3d.com/ScriptReference/KeyCode.html",
-            a => { a.Description = "Modifier key to enable bulk harvest when using keyboard controls."; });
+            "Hold with Use to harvest a single target. Use alone bulk harvests when EnableBulkHarvest is enabled. Vanilla alt-place also selects a single target. See https://docs.unity3d.com/ScriptReference/KeyCode.html",
+            a => { a.Description = "Hold with Use to harvest a single target. Use alone bulk harvests."; });
 
         //Difficulty
         preventPartialPlanting = Config.BindInOrder("Difficulty", "PreventPartialPlanting", false, "Prevents placement of resources when any placement ghosts are invalid for any reason.");
         preventInvalidPlanting = Config.BindInOrder("Difficulty", "PreventInvalidPlanting", true, "Prevents plants from being placed where they will be unable to grow.");
-        useStamina = Config.BindInOrder("Difficulty", "UseStamina", true, "Consume stamina for every piece placed.");
-        useDurability = Config.BindInOrder("Difficulty", "UseDurability", true, "Decrease durability of cultivator for every piece placed.");
+        useStamina = Config.BindInOrder("Difficulty", "UseStamina", true, "Consume stamina for every piece placed.", syncMode: SyncMode.AlwaysServerControlled);
+        useDurability = Config.BindInOrder("Difficulty", "UseDurability", true, "Decrease durability of cultivator for every piece placed.", syncMode: SyncMode.AlwaysServerControlled);
 
         //General
         modActive = Config.BindInOrder("General", "ModActive", true, "Enables all mod features.");
@@ -141,6 +148,7 @@ sealed class ModConfig
         //Grid
         globallyAlignGridDirections = Config.BindInOrder("Grid", "GloballyAlignGridDirections", true, "When set to true, new grid placements will have their column and row directions align with the global grid.");
         minimizeGridSpacing = Config.BindInOrder("Grid", "MinimizeGridSpacing", false, "Allows for tighter grids, but with varying spacing used between diverse/distinct plants. ");
+        gridLayout = Config.BindInOrder("Grid", "GridLayout", GridLayout.Square, "Square keeps equal row and column spacing. Staggered offsets every other row by half a column and sets row spacing to column spacing × √3/2, using the same per-crop spacing (MinimizeGridSpacing, ExtraCropSpacing, and ExtraSaplingSpacing).");
         gridSnappingStyle = Config.BindInOrder("Grid", "GridSnappingStyle", GridSnappingStyle.Intelligent, "Determines grid snapping style. Intelligent will attempt to prevent a new grid from overlapping with an old one. Legacy will allow any orientation of new rows and columns.");
         forceAltPlacement = Config.BindInOrder("Grid", "ForceAltPlacement", false, "When enabled, alternate placement mode for the cultivator is always used. Alternate placement mode allows free rotation when snapping to a single piece.");
         preferCardinalSnapping = Config.BindInOrder("Grid", "PreferCardinalSnapping", false, "Prefer cardinal snap points over diagonal snap points when snapping to existing grids.");
@@ -148,7 +156,7 @@ sealed class ModConfig
         extraSaplingSpacing = Config.BindInOrder("Grid", "ExtraSaplingSpacing", 0f, "Adds extra spacing between saplings. Accepts negative values to decrease spacing (not recommended).");
 
         //Harvesting
-        enableBulkHarvest = Config.BindInOrder("Harvesting", "EnableBulkHarvest", true, "Enables the ability to harvest multiple resources at once.");
+        enableBulkHarvest = Config.BindInOrder("Harvesting", "EnableBulkHarvest", true, "Enables area harvest on Use. Hold KeyboardHarvestModifierKey or vanilla alt-place to harvest a single target.");
         harvestStyle = Config.BindInOrder("Harvesting", "HarvestStyle", HarvestStyle.AllResources, "Determines bulk harvest style. LikeResources only harvests resources of the type you've interacted with. AllResources harvests all eligible resources.");
         harvestRadius = Config.BindInOrder("Harvesting", "HarvestRadius", 3.0f, "Determines radius used to search for resources when bulk harvesting.");
         replantOnHarvest = Config.BindInOrder("Harvesting", "ReplantOnHarvest", false, "Enables automatic replanting of crops when harvested, provided you have the resources.");
@@ -287,6 +295,7 @@ sealed class ModConfig
     //Grid
     internal bool GloballyAlignGridDirections => globallyAlignGridDirections.Value;
     internal bool MinimizeGridSpacing => minimizeGridSpacing.Value;
+    internal GridLayout GridLayout => gridLayout.Value;
     internal GridSnappingStyle GridSnappingStyle => gridSnappingStyle.Value;
     internal bool ForceAltPlacement => forceAltPlacement.Value;
     internal bool PreferCardinalSnapping => preferCardinalSnapping.Value;

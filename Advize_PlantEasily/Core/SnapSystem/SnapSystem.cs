@@ -121,8 +121,20 @@ internal static class SnapSystem
 
         direction = FixedRotation * direction;
 
-        RowDirection = direction * pieceSpacing;
-        ColumnDirection = Vector3.Cross(Vector3.up, direction).normalized * pieceSpacing;
+        Vector3 alongNeighbor = direction * pieceSpacing;
+        Vector3 perpendicular = Vector3.Cross(Vector3.up, direction).normalized * pieceSpacing;
+
+        // Staggered rows run perpendicular to a detected neighbor so the six hex slots stay on that lattice.
+        if (config.GridLayout == GridLayout.Staggered)
+        {
+            ColumnDirection = alongNeighbor;
+            RowDirection = perpendicular;
+        }
+        else
+        {
+            RowDirection = alongNeighbor;
+            ColumnDirection = perpendicular;
+        }
 
         return true;
     }
@@ -316,7 +328,11 @@ internal static class SnapSystem
 
         if (!snap.isCardinal)
         {
-            if (!PositionHasCollisions(snap.pos + RowDirection + ColumnDirection))
+            Vector3 diagonal = config.GridLayout == GridLayout.Staggered
+                ? GridCellOffset(1, 0, RowDirection, ColumnDirection)
+                : RowDirection + ColumnDirection;
+
+            if (!PositionHasCollisions(snap.pos + diagonal))
                 return;
 
             ColumnDirection = -ColumnDirection;

@@ -11,7 +11,7 @@ internal static class ModUtils
 
     internal static bool IsPlantOrPickable(GameObject go) => go.GetComponent<Plant>() || go.GetComponent<Pickable>();
 
-    internal static bool HasGrowSpace(Plant plant, Vector3 position) => Physics.OverlapSphere(position, plant.m_growRadius, Plant.m_spaceMask).Length == 0;
+    internal static bool HasGrowSpace(Plant plant, Vector3 position) => Physics.OverlapSphere(position, plant.m_growRadius, PlantCollisionMask).Length == 0;
 
     internal static bool PositionHasCollisions(Vector3 position) => Physics.CheckCapsule(position, position + (Vector3.up * 0.1f), Mathf.Epsilon, CollisionScanner.CollisionMask);
 
@@ -41,6 +41,18 @@ internal static class ModUtils
         float growRadius = isSapling ? plant.m_growRadius * 2.2f : plant?.m_growRadius * (config.MinimizeGridSpacing ? 1.1f : 2f) ?? PickableSnapRadius(go.GetComponent<Piece>());
 
         return growRadius + colliderRadius;
+    }
+
+    // Distance between hex rows so each neighbor stays exactly one column-spacing away.
+    internal static float StaggeredRowScale => Mathf.Sqrt(3f) * 0.5f;
+
+    internal static Vector3 GridCellOffset(int row, int column, Vector3 rowDirection, Vector3 columnDirection)
+    {
+        if (config.GridLayout != GridLayout.Staggered)
+            return (rowDirection * row) + (columnDirection * column);
+
+        Vector3 stagger = (row & 1) == 1 ? columnDirection * 0.5f : Vector3.zero;
+        return (rowDirection * (StaggeredRowScale * row)) + (columnDirection * column) + stagger;
     }
 
     internal static HashSet<Interactable> FindResourcesInRadius(GameObject rootInteractable)
@@ -76,6 +88,8 @@ internal static class ModUtils
 
         return extraInteractables;
     }
+
+    private static readonly int PlantCollisionMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "piece_nonsolid");
 
     private static float PickableSnapRadius(Piece p) => p?.m_harvestRadius > 0 ? p.m_harvestRadius : config.DefaultGridSpacing;
 }
