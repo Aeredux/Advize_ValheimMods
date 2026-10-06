@@ -31,7 +31,11 @@ internal static class SnapPointGenerator
         Vector3 col = ColumnDirection;
         int count = 0;
 
-        if (gridDetected)
+        if (gridDetected && config.GridLayout == GridLayout.Staggered)
+        {
+            count = AppendHexNeighbors(snapFromPos, row, col, count);
+        }
+        else if (gridDetected)
         {
             _positionBuffer[count++] = snapFromPos + row;
             _positionBuffer[count++] = snapFromPos - row;
@@ -67,6 +71,20 @@ internal static class SnapPointGenerator
             }
         }
 
+        return count;
+    }
+
+    private static int AppendHexNeighbors(Vector3 snapFromPos, Vector3 row, Vector3 col, int count)
+    {
+        Vector3 rowHex = row * StaggeredRowScale;
+        Vector3 halfColumn = col * 0.5f;
+
+        _positionBuffer[count++] = snapFromPos + col;
+        _positionBuffer[count++] = snapFromPos - col;
+        _positionBuffer[count++] = snapFromPos + rowHex + halfColumn;
+        _positionBuffer[count++] = snapFromPos + rowHex - halfColumn;
+        _positionBuffer[count++] = snapFromPos - rowHex + halfColumn;
+        _positionBuffer[count++] = snapFromPos - rowHex - halfColumn;
         return count;
     }
 

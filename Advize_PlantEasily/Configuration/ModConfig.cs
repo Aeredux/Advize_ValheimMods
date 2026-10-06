@@ -46,6 +46,7 @@ sealed class ModConfig
     //Grid
     private readonly ConfigEntry<bool> globallyAlignGridDirections;
     private readonly ConfigEntry<bool> minimizeGridSpacing;
+    private readonly ConfigEntry<GridLayout> gridLayout;
     private readonly ConfigEntry<GridSnappingStyle> gridSnappingStyle;
     private readonly ConfigEntry<bool> forceAltPlacement;
     private readonly ConfigEntry<bool> preferCardinalSnapping;
@@ -147,6 +148,7 @@ sealed class ModConfig
         //Grid
         globallyAlignGridDirections = Config.BindInOrder("Grid", "GloballyAlignGridDirections", true, "When set to true, new grid placements will have their column and row directions align with the global grid.");
         minimizeGridSpacing = Config.BindInOrder("Grid", "MinimizeGridSpacing", false, "Allows for tighter grids, but with varying spacing used between diverse/distinct plants. ");
+        gridLayout = Config.BindInOrder("Grid", "GridLayout", GridLayout.Square, "Square keeps equal row and column spacing. Staggered offsets every other row by half a column and sets row spacing to column spacing × √3/2, using the same per-crop spacing (MinimizeGridSpacing, ExtraCropSpacing, and ExtraSaplingSpacing).");
         gridSnappingStyle = Config.BindInOrder("Grid", "GridSnappingStyle", GridSnappingStyle.Intelligent, "Determines grid snapping style. Intelligent will attempt to prevent a new grid from overlapping with an old one. Legacy will allow any orientation of new rows and columns.");
         forceAltPlacement = Config.BindInOrder("Grid", "ForceAltPlacement", false, "When enabled, alternate placement mode for the cultivator is always used. Alternate placement mode allows free rotation when snapping to a single piece.");
         preferCardinalSnapping = Config.BindInOrder("Grid", "PreferCardinalSnapping", false, "Prefer cardinal snap points over diagonal snap points when snapping to existing grids.");
@@ -293,6 +295,7 @@ sealed class ModConfig
     //Grid
     internal bool GloballyAlignGridDirections => globallyAlignGridDirections.Value;
     internal bool MinimizeGridSpacing => minimizeGridSpacing.Value;
+    internal GridLayout GridLayout => gridLayout.Value;
     internal GridSnappingStyle GridSnappingStyle => gridSnappingStyle.Value;
     internal bool ForceAltPlacement => forceAltPlacement.Value;
     internal bool PreferCardinalSnapping => preferCardinalSnapping.Value;

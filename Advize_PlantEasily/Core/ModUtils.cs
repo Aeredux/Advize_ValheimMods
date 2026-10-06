@@ -43,6 +43,18 @@ internal static class ModUtils
         return growRadius + colliderRadius;
     }
 
+    // Distance between hex rows so each neighbor stays exactly one column-spacing away.
+    internal static float StaggeredRowScale => Mathf.Sqrt(3f) * 0.5f;
+
+    internal static Vector3 GridCellOffset(int row, int column, Vector3 rowDirection, Vector3 columnDirection)
+    {
+        if (config.GridLayout != GridLayout.Staggered)
+            return (rowDirection * row) + (columnDirection * column);
+
+        Vector3 stagger = (row & 1) == 1 ? columnDirection * 0.5f : Vector3.zero;
+        return (rowDirection * (StaggeredRowScale * row)) + (columnDirection * column) + stagger;
+    }
+
     internal static HashSet<Interactable> FindResourcesInRadius(GameObject rootInteractable)
     {
         HashSet<Interactable> extraInteractables = [];

@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using static ModContext;
+using static ModUtils;
 using static PlacementState;
 
 internal static class GhostGrid
@@ -24,6 +25,7 @@ internal static class GhostGrid
     private static Quaternion _lastEffectiveRotation;
     private static int _lastRows;
     private static int _lastColumns;
+    private static GridLayout _lastGridLayout;
     private static string _lastPieceName;
     private static bool _preservePool;
 
@@ -234,8 +236,12 @@ internal static class GhostGrid
     {
         DirectionRenderer.SetActive(PlacementGhost.activeSelf);
         Vector3 vertex = BasePosition + Vector3.up * 0.5f;
-        LineRenderers[0].SetPositions([vertex, vertex + (RowDirection * (ActualRows - 1))]);
-        LineRenderers[1].SetPositions([vertex, vertex + (ColumnDirection * (ActualColumns - 1))]);
+        Vector3 rowStep = config.GridLayout == GridLayout.Staggered ? RowDirection * StaggeredRowScale : RowDirection;
+        float columnSpan = ActualColumns - 1;
+        if (config.GridLayout == GridLayout.Staggered && ActualRows > 1)
+            columnSpan += 0.5f;
+        LineRenderers[0].SetPositions([vertex, vertex + (rowStep * (ActualRows - 1))]);
+        LineRenderers[1].SetPositions([vertex, vertex + (ColumnDirection * columnSpan)]);
         // Debug purposes, show direction to snap origin
         LineRenderers[2].gameObject.SetActive(config.ShowSnapDirection);
         LineRenderers[2].SetPositions([vertex, vertex + SnapDirection * RowDirection.magnitude]);
@@ -268,6 +274,12 @@ internal static class GhostGrid
         {
             _lastRows = config.Rows;
             _lastColumns = config.Columns;
+            changed = true;
+        }
+
+        if (config.GridLayout != _lastGridLayout)
+        {
+            _lastGridLayout = config.GridLayout;
             changed = true;
         }
 
@@ -304,7 +316,7 @@ internal static class GhostGrid
 
     private static Vector3 GetGhostPosition(int row, int column, int index)
     {
-        Vector3 pos = index == 0 ? BasePosition : BasePosition + RowDirection * row + ColumnDirection * column;
+        Vector3 pos = index == 0 ? BasePosition : BasePosition + GridCellOffset(row, column, RowDirection, ColumnDirection);
 
         Heightmap.GetHeight(pos, out float height);
         pos.y = height;
